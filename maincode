@@ -1,0 +1,125 @@
+
+/*Bu kod tamamen Mustafa ACAR'a aittir.
+ * Daha ilk versiyonu olup,refactoring işlemine henüz başlamadım.
+ * İlk arduino projem ve ilk kodum sayılır.
+ * EEPROM'u sırf LCD ekran kullandığım için koduma dahil ettim.
+ * startAnimation daha fazla şekillendirilebilir.
+*/
+
+
+#include <EEPROM.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27,16,2);
+int selectButton=4;
+int potDeger=A0;
+int delay1;
+int rolePin=5;
+int startPin=7;
+int switchMode=1;
+int ledPin=10;
+int mappedPot=0;
+int EEPROMAdress=0;
+int EEPROMGelenDeger=0;
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+  pinMode(ledPin,OUTPUT);
+ pinMode(selectButton,INPUT);
+ pinMode(rolePin,OUTPUT);
+ pinMode(startPin,INPUT);
+ digitalWrite(rolePin,HIGH);
+ startAnimation();
+
+}
+
+void loop() {
+    // put your main code here, to run repeatedly:
+    switchMode=digitalRead(startPin);
+     potDeger=analogRead(A0);
+     Serial.println(switchMode);
+     //Serial.println(potDeger);
+if (digitalRead(selectButton)==HIGH)
+{
+     digitalWrite(ledPin,HIGH);
+     delay(100);
+     digitalWrite(ledPin,LOW);
+     potDeger=delay1;
+     lcd.clear();
+     lcd.setCursor(0,0);
+     lcd.print("Bekleme suresi");
+     lcd.setCursor(0,1);
+     lcd.print(" ayarlandi.");
+     EEPROM.write(EEPROMAdress,mappedPot);
+     //Serial.println(EEPROMAdress);
+     delay(1000);
+    
+}else{mainCode();}
+if(switchMode==0)
+{  
+  EEPROMGelenDeger=EEPROM.read(EEPROMAdress);
+
+  
+  delay1=EEPROMGelenDeger;
+  digitalWrite(rolePin,LOW);
+  delay(delay1);
+  digitalWrite(rolePin,HIGH); 
+  delay(500);
+  Serial.println(delay1);
+}
+else{digitalWrite(rolePin,HIGH);}
+if(EEPROMAdress==5)
+{
+  EEPROMAdress=0;
+  for (int i = 0 ; i < EEPROM.length() ; i++) {
+    EEPROM.write(i, 0);
+  }
+}
+
+}
+void mainCode()
+{
+    lcd.setCursor(0,0);
+    lcd.print("pot ile deger");
+    lcd.setCursor(0,1);
+    lcd.print("giriniz.");
+    lcd.setCursor(9,1);
+    mappedPot=map(potDeger,0,1023,0,500);
+    //Serial.print(potDeger);
+      lcd.print(mappedPot);
+      if(mappedPot<100)
+      {
+        lcd.setCursor(8,1);
+        lcd.print(" ");
+        lcd.setCursor(11,1);
+        lcd.print(" ");
+      }
+      lcd.setCursor(8,1);
+      lcd.print(" ");
+      lcd.setCursor(12,1);
+      lcd.print("ms");
+}
+byte customChar[] = {
+  B10000,
+  B01000,
+  B00100,
+  B00010,
+  B00010,
+  B00100,
+  B01000,
+  B10000
+};
+void startAnimation()
+{
+ lcd.createChar(0,customChar);
+ lcd.setCursor(0,0);
+ lcd.write(byte(0));
+ lcd.setCursor(1,0);
+ lcd.print("Are you ready?");
+ lcd.setCursor(0,1);
+ lcd.print("Coded by Acuurla");
+ delay(3000);
+ lcd.clear();
+}
